@@ -1,4 +1,3 @@
-cat > /home/cm2025/mysite/flask_app.py << 'EOF'
 from flask import Flask, jsonify, render_template
 from tester.runner import run_all
 from storage import init_db, save_run, list_runs, get_last_run
