@@ -1,0 +1,13 @@
+# API Choice 1
+
+- Étudiant : Matthieu Cho-Lin
+- API choisie : Adresse BAN
+- URL base : [https://arbeitnow.com/api/job-board-api](https://data.geopf.fr/tms/1.0.0/ADMIN_EXPRESS/metadata.json/)
+- Documentation officielle / README : [https://documenter.getpostman.com/view/18545278/UVJbJdKh](https://geoservices.ign.fr/services-web-experts-administratif)
+- Auth : None
+- Endpoints testés :
+  - GET ... S'il ne rend pas le status 200.
+  - GET ... verifie 
+- Hypothèses de contrat (champs attendus, types, codes) :
+- Limites / rate limiting connu :
+- Risques (instabilité, downtime, CORS, etc.) :
