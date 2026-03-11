@@ -1,43 +1,79 @@
-import requests
+"""
+tester/client.py
+Wrapper HTTP : timeout, mesure de latence, retry simple, gestion 429/5xx.
+"""
+
 import time
+import requests
 
 BASE_URL = "https://data.geopf.fr/geocodage"
+DEFAULT_TIMEOUT = 5  # secondes
 
-def get(endpoint, params=None, timeout=5, retries=1):
+
+def get(path: str, params: dict = None, retries: int = 1) -> dict:
     """
-    Envoie une requête GET à l'API BAN.
-    - timeout : secondes max avant d'abandonner
-    - retries : nombre de tentatives supplémentaires si erreur
-    Retourne un dict avec : status, json, latency_ms, error
+    Effectue un GET sur BASE_URL + path.
+    Retourne un dict avec :
+      - status_code (int)
+      - json (dict | None)
+      - latency_ms (float)
+      - error (str | None)
+    Gère : timeout, 429 (backoff 2s), 5xx, erreurs réseau.
     """
-    url = BASE_URL + endpoint
+    url = BASE_URL + path
     attempt = 0
 
     while attempt <= retries:
+        start = time.perf_counter()
         try:
-            start = time.time()
-            response = requests.get(url, params=params, timeout=timeout)
-            latency_ms = round((time.time() - start) * 1000)
+            resp = requests.get(url, params=params, timeout=DEFAULT_TIMEOUT)
+            latency_ms = (time.perf_counter() - start) * 1000
 
-            # Gestion du rate limiting (429) : on attend et on réessaie
-            if response.status_code == 429:
-                time.sleep(2)
-                attempt += 1
-                continue
+            # Gestion rate-limit : backoff et retry
+            if resp.status_code == 429:
+                if attempt < retries:
+                    time.sleep(2)
+                    attempt += 1
+                    continue
+                return {
+                    "status_code": 429,
+                    "json": None,
+                    "latency_ms": round(latency_ms, 2),
+                    "error": "Rate limited (429)",
+                }
+
+            # Tenter de parser le JSON
+            try:
+                body = resp.json()
+            except Exception:
+                body = None
 
             return {
-                "status": response.status_code,
-                "json": response.json() if response.headers.get("Content-Type", "").startswith("application/json") else None,
-                "latency_ms": latency_ms,
-                "error": None
+                "status_code": resp.status_code,
+                "json": body,
+                "latency_ms": round(latency_ms, 2),
+                "error": None,
             }
 
         except requests.Timeout:
-            attempt += 1
-            if attempt > retries:
-                return {"status": None, "json": None, "latency_ms": None, "error": "timeout"}
+            latency_ms = (time.perf_counter() - start) * 1000
+            if attempt < retries:
+                attempt += 1
+                continue
+            return {
+                "status_code": None,
+                "json": None,
+                "latency_ms": round(latency_ms, 2),
+                "error": "Timeout",
+            }
+        except requests.RequestException as exc:
+            latency_ms = (time.perf_counter() - start) * 1000
+            return {
+                "status_code": None,
+                "json": None,
+                "latency_ms": round(latency_ms, 2),
+                "error": str(exc),
+            }
 
-        except Exception as e:
-            return {"status": None, "json": None, "latency_ms": None, "error": str(e)}
-
-    return {"status": None, "json": None, "latency_ms": None, "error": "max retries reached"}
+    # Ne devrait pas arriver
+    return {"status_code": None, "json": None, "latency_ms": 0, "error": "Unknown"}
