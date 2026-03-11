@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, jsonify, render_template
 from tester.runner import run_all
 from storage import init_db, save_run, list_runs, get_last_run
 import time
@@ -7,14 +7,14 @@ app = Flask(__name__)
 init_db()
 
 last_run_time = 0
-MIN_INTERVAL = 300  # 5 minutes entre deux runs
+MIN_INTERVAL = 300  # 5 minutes minimum entre deux runs
 
 @app.route("/")
-def consignes():
-    return render_template('consignes.html')
+def index():
+    return render_template("dashboard.html")
 
 @app.route("/run")
-def run():
+def run_tests():
     global last_run_time
     now = time.time()
     if now - last_run_time < MIN_INTERVAL:
@@ -27,4 +27,4 @@ def run():
 
 @app.route("/dashboard")
 def dashboard():
-    runs = list_
+    runs = li
