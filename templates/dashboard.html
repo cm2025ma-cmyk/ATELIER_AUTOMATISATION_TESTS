@@ -42,4 +42,25 @@
       <tr>
         <td>{{ t.name }}</td>
         <td class="{{ 'pass' if t.status == 'PASS' else 'fail' }}">{{ t.status }}</td>
-        <td>{{ t
+        <td>{{ t.latency_ms }}</td>
+        <td>{{ t.details }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <p>Aucun run encore. Clique sur <strong>Lancer un run</strong> !</p>
+  {% endif %}
+
+  {% if runs %}
+  <h2>📅 Historique des runs</h2>
+  <table>
+    <tr><th>Date</th><th>Passed</th><th>Failed</th><th>Erreur %</th><th>Latence moy.</th><th>p95</th></tr>
+    {% for r in runs %}
+    <tr>
+      <td>{{ r.timestamp }}</td>
+      <td class="pass">{{ r.passed }}</td>
+      <td class="fail">{{ r.failed }}</td>
+      <td>{{ (r.error_rate * 100)|round(1) }}%</td>
+      <td>{{ r.latency_avg }} ms</td>
+      <td>{{ r.latency_p95 }} ms</t
