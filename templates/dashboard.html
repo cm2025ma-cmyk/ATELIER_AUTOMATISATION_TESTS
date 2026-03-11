@@ -1,66 +1,150 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard BAN — Tests API</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard — API Géoplateforme IGN</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
-    h1 { color: #2c3e50; }
-    .summary { background: #f0f4f8; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
-    .pass { color: #27ae60; font-weight: bold; }
-    .fail { color: #e74c3c; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
-    td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
-    tr:hover { background: #f9f9f9; }
-    a.btn { display: inline-block; margin: 8px 4px; padding: 10px 20px;
-            background: #2980b9; color: white; border-radius: 6px; text-decoration: none; }
-    a.btn:hover { background: #1a6fa8; }
+    :root{
+      --bg:#0b1020;--card:#121a33;--muted:#aab4d4;--text:#e9edff;
+      --accent:#77baff;--ok:#62d6a0;--warn:#ffcc66;--bad:#ff6b7a;--line:#23305c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;
+      background:radial-gradient(1200px 600px at 10% 0%,#172257 0%,var(--bg) 60%);
+      color:var(--text);line-height:1.5}
+    header{max-width:1100px;margin:0 auto;padding:32px 18px 8px}
+    h1{margin:0 0 6px;font-size:clamp(20px,3vw,30px)}
+    .sub{color:var(--muted);font-size:13px}
+    main{max-width:1100px;margin:0 auto;padding:18px}
+    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    @media(max-width:700px){.kpi{grid-template-columns:1fr 1fr}}
+    .kbox{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
+      border-radius:14px;padding:14px}
+    .kbox .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .kbox .val{font-size:26px;font-weight:700;margin:4px 0 0}
+    .kbox .val.ok{color:var(--ok)} .kbox .val.bad{color:var(--bad)}
+    .kbox .val.warn{color:var(--warn)}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+      border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;margin-bottom:18px}
+    .card h2{margin:0 0 14px;font-size:16px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;vertical-align:top}
+    th{background:rgba(119,186,255,.08);font-weight:600}
+    tr:last-child td{border-bottom:none}
+    .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600}
+    .badge.PASS{background:rgba(98,214,160,.15);color:var(--ok);border:1px solid rgba(98,214,160,.3)}
+    .badge.FAIL,.badge.ERROR{background:rgba(255,107,122,.15);color:var(--bad);border:1px solid rgba(255,107,122,.3)}
+    .badge.UP{background:rgba(98,214,160,.15);color:var(--ok);border:1px solid rgba(98,214,160,.3)}
+    .badge.DEGRADED{background:rgba(255,204,102,.15);color:var(--warn);border:1px solid rgba(255,204,102,.3)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    a.btn{padding:9px 18px;border-radius:12px;font-size:13px;font-weight:600;text-decoration:none;
+      background:rgba(119,186,255,.18);border:1px solid rgba(119,186,255,.34);color:#d9ecff}
+    a.btn:hover{filter:brightness(1.1)}
+    a.btn.run{background:rgba(98,214,160,.18);border-color:rgba(98,214,160,.34);color:#d8ffe9}
+    .muted{color:var(--muted)}
+    .ts{font-size:11px;color:var(--muted)}
+    .empty{color:var(--muted);text-align:center;padding:30px;font-size:14px}
+    .bar-wrap{background:rgba(255,255,255,.06);border-radius:6px;height:6px;width:80px;display:inline-block;vertical-align:middle}
+    .bar-fill{height:6px;border-radius:6px;background:var(--accent)}
   </style>
 </head>
 <body>
-  <h1>🗺️ Dashboard — Base Adresse Nationale</h1>
+<header>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+    <span style="background:rgba(119,186,255,.12);border:1px solid rgba(119,186,255,.28);
+      color:#d9ecff;padding:4px 12px;border-radius:999px;font-size:12px">API Géoplateforme IGN</span>
+    <span style="background:rgba(98,214,160,.12);border:1px solid rgba(98,214,160,.28);
+      color:#d8ffe9;padding:4px 12px;border-radius:999px;font-size:12px">No Auth</span>
+  </div>
+  <h1>Dashboard — Tests automatisés</h1>
+  <p class="sub">Géocodage IGN · <code>https://data.geopf.fr/geocodage</code></p>
+</header>
 
-  <p>
-    <a class="btn" href="/run">▶ Lancer un run</a>
-    <a class="btn" href="/history">📥 Export JSON</a>
-    <a class="btn" href="/health">💚 Health</a>
-  </p>
+<main>
+  <div class="actions">
+    <a class="btn run" href="/run">▶ Lancer un run</a>
+    <a class="btn" href="/export">⬇ Export JSON</a>
+    <a class="btn" href="/health">⚙ Health</a>
+  </div>
 
-  {% if last %}
-  <div class="summary">
-    <h2>Dernier run — {{ last.timestamp }}</h2>
-    <p>
-      ✅ <span class="pass">{{ last.summary.passed }} passed</span> &nbsp;|&nbsp;
-      ❌ <span class="fail">{{ last.summary.failed }} failed</span> &nbsp;|&nbsp;
-      ⏱️ Latence moy. : <strong>{{ last.summary.latency_ms_avg }} ms</strong> &nbsp;|&nbsp;
-      📊 p95 : <strong>{{ last.summary.latency_ms_p95 }} ms</strong>
-    </p>
+  <!-- KPI du dernier run -->
+  {% if latest %}
+  {% set s = latest.summary %}
+  <div class="kpi">
+    <div class="kbox">
+      <div class="label">Disponibilité</div>
+      <div class="val {{ 'ok' if s.availability == 'UP' else 'bad' }}">{{ s.availability }}</div>
+    </div>
+    <div class="kbox">
+      <div class="label">Tests passés</div>
+      <div class="val ok">{{ s.passed }} / {{ s.total }}</div>
+    </div>
+    <div class="kbox">
+      <div class="label">Latence moy.</div>
+      <div class="val {{ 'ok' if s.latency_ms_avg < 500 else 'warn' }}">{{ s.latency_ms_avg }} ms</div>
+    </div>
+    <div class="kbox">
+      <div class="label">Taux d'erreur</div>
+      <div class="val {{ 'ok' if s.error_rate == 0 else ('warn' if s.error_rate < 0.3 else 'bad') }}">
+        {{ (s.error_rate * 100) | round(1) }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Détail du dernier run -->
+  <div class="card">
+    <h2>Dernier run — <span class="ts">{{ latest.timestamp }}</span></h2>
     <table>
-      <tr><th>Test</th><th>Statut</th><th>Latence (ms)</th><th>Détails</th></tr>
-      {% for t in last.tests %}
-      <tr>
-        <td>{{ t.name }}</td>
-        <td class="{{ 'pass' if t.status == 'PASS' else 'fail' }}">{{ t.status }}</td>
-        <td>{{ t.latency_ms }}</td>
-        <td>{{ t.details }}</td>
-      </tr>
-      {% endfor %}
+      <thead>
+        <tr><th>Test</th><th>Statut</th><th>Latence</th><th>Détails</th></tr>
+      </thead>
+      <tbody>
+        {% for t in latest.tests %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td><span class="badge {{ t.status }}">{{ t.status }}</span></td>
+          <td>
+            {{ t.latency_ms }} ms
+            <span class="bar-wrap"><span class="bar-fill" style="width:{{ [t.latency_ms / 20, 100] | min }}%"></span></span>
+          </td>
+          <td class="muted">{{ t.details or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
   </div>
   {% else %}
-  <p>Aucun run encore. Clique sur <strong>Lancer un run</strong> !</p>
+  <div class="card"><p class="empty">Aucun run disponible. Cliquez sur "Lancer un run" pour démarrer.</p></div>
   {% endif %}
 
-  {% if runs %}
-  <h2>📅 Historique des runs</h2>
-  <table>
-    <tr><th>Date</th><th>Passed</th><th>Failed</th><th>Erreur %</th><th>Latence moy.</th><th>p95</th></tr>
-    {% for r in runs %}
-    <tr>
-      <td>{{ r.timestamp }}</td>
-      <td class="pass">{{ r.passed }}</td>
-      <td class="fail">{{ r.failed }}</td>
-      <td>{{ (r.error_rate * 100)|round(1) }}%</td>
-      <td>{{ r.latency_avg }} ms</td>
-      <td>{{ r.latency_p95 }} ms</t
+  <!-- Historique -->
+  <div class="card">
+    <h2>Historique des runs</h2>
+    {% if history %}
+    <table>
+      <thead>
+        <tr><th>#</th><th>Timestamp</th><th>Passés</th><th>Échoués</th><th>Latence moy.</th><th>p95</th><th>Erreurs</th><th>Dispo</th></tr>
+      </thead>
+      <tbody>
+        {% for r in history %}
+        <tr>
+          <td class="muted">{{ r.id }}</td>
+          <td class="ts">{{ r.timestamp }}</td>
+          <td style="color:var(--ok)">{{ r.passed }}</td>
+          <td style="color:{{ 'var(--bad)' if r.failed > 0 else 'var(--muted)' }}">{{ r.failed }}</td>
+          <td>{{ r.latency_avg }} ms</td>
+          <td>{{ r.latency_p95 }} ms</td>
+          <td>{{ (r.error_rate * 100) | round(1) }}%</td>
+          <td><span class="badge {{ r.availability }}">{{ r.availability }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Aucun historique pour l'instant.</p>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>
