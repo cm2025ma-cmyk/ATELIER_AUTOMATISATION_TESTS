@@ -1,13 +1,36 @@
-# API Choice 1
+# API Choice
 
 - Étudiant : Matthieu Cho-Lin
-- API choisie : Adresse BAN
-- URL base : [https://arbeitnow.com/api/job-board-api](https://data.geopf.fr/tms/1.0.0/ADMIN_EXPRESS/metadata.json/)
-- Documentation officielle / README : [https://documenter.getpostman.com/view/18545278/UVJbJdKh](https://geoservices.ign.fr/services-web-experts-administratif)
-- Auth : None
+- API choisie : API Adresse — Base Adresse Nationale (BAN) / Géoplateforme IGN
+- URL base : https://geocodage.ign.fr/look4/
+- Documentation officielle : https://adresse.data.gouv.fr/outils/api-doc/adresse
+- Auth : None (aucune clé requise)
+
 - Endpoints testés :
-  - GET ... S'il ne rend pas le status 200.
-  - GET ... verifie 
+  - GET /search/?q=8+bd+du+port&limit=1        → géocodage (adresse → coordonnées GPS)
+  - GET /reverse/?lon=2.37&lat=48.85           → géocodage inverse (GPS → adresse)
+  - GET /search/?q=adresseinvalide123xyz       → cas d'entrée invalide (résultat vide)
+
 - Hypothèses de contrat (champs attendus, types, codes) :
+  - HTTP 200 dans tous les cas (même si 0 résultats)
+  - Content-Type: application/json
+  - Champs attendus dans features[0].properties :
+    - label (string) : adresse complète
+    - score (float entre 0 et 1)
+    - housenumber (string)
+    - street (string)
+    - city (string)
+    - postcode (string, 5 chiffres)
+    - citycode (string, code INSEE 5 chiffres)
+    - x, y (float, coordonnées Lambert93)
+    - lon, lat (float)
+    - type (string : "housenumber", "street", "municipality"...)
+
 - Limites / rate limiting connu :
-- Risques (instabilité, downtime, CORS, etc.) :
+  - 50 appels / seconde / IP (très généreux)
+  - Pas de quota journalier connu
+
+- Risques :
+  - Migration récente DINUM → IGN, possible instabilité ponctuelle
+  - Résultats vides possibles pour adresses mal formées (à tester)
+  - Pas de CORS côté tests serveur → pas de problème en Python
