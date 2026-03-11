@@ -57,4 +57,12 @@ def list_runs(limit=20):
             "latency_p95": row["latency_p95"],
             "tests": json.loads(row["details"])
         })
+
+    def get_last_run():
+    """Retourne le dernier run complet."""
+    runs = list_runs(limit=1)
+    if not runs:
+        return None
+    return runs[0]
+
     return result
