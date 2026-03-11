@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard BAN — Tests API</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #2c3e50; }
+    .summary { background: #f0f4f8; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+    .pass { color: #27ae60; font-weight: bold; }
+    .fail { color: #e74c3c; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th { background: #2c3e50; color: white; padding: 10px; text-align: left; }
+    td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+    tr:hover { background: #f9f9f9; }
+    a.btn { display: inline-block; margin: 8px 4px; padding: 10px 20px;
+            background: #2980b9; color: white; border-radius: 6px; text-decoration: none; }
+    a.btn:hover { background: #1a6fa8; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Dashboard — Base Adresse Nationale</h1>
+
+  <p>
+    <a class="btn" href="/run">▶ Lancer un run</a>
+    <a class="btn" href="/history">📥 Export JSON</a>
+    <a class="btn" href="/health">💚 Health</a>
+  </p>
+
+  {% if last %}
+  <div class="summary">
+    <h2>Dernier run — {{ last.timestamp }}</h2>
+    <p>
+      ✅ <span class="pass">{{ last.summary.passed }} passed</span> &nbsp;|&nbsp;
+      ❌ <span class="fail">{{ last.summary.failed }} failed</span> &nbsp;|&nbsp;
+      ⏱️ Latence moy. : <strong>{{ last.summary.latency_ms_avg }} ms</strong> &nbsp;|&nbsp;
+      📊 p95 : <strong>{{ last.summary.latency_ms_p95 }} ms</strong>
+    </p>
+    <table>
+      <tr><th>Test</th><th>Statut</th><th>Latence (ms)</th><th>Détails</th></tr>
+      {% for t in last.tests %}
+      <tr>
+        <td>{{ t.name }}</td>
+        <td class="{{ 'pass' if t.status == 'PASS' else 'fail' }}">{{ t.status }}</td>
+        <td>{{ t
