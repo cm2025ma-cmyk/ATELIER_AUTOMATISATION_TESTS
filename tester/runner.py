@@ -67,3 +67,33 @@ ALL_TESTS = [
     test_reverse_geocoding,
     test_search_empty_query,
 ]
+from datetime import datetime
+import statistics
+
+def run_all():
+    results = []
+    for test_fn in ALL_TESTS:
+        result = test_fn()
+        results.append(result)
+
+    passed = sum(1 for r in results if r["status"] == "PASS")
+    failed = len(results) - passed
+    latencies = [r["latency_ms"] for r in results if r["latency_ms"] is not None]
+
+    avg_latency = round(statistics.mean(latencies)) if latencies else None
+    p95_latency = round(statistics.quantiles(latencies, n=20)[18]) if len(latencies) >= 2 else avg_latency
+
+    return {
+        "api": "Base Adresse Nationale",
+        "timestamp": datetime.now().isoformat(),
+        "summary": {
+            "passed": passed,
+            "failed": failed,
+            "total": len(results),
+            "error_rate": round(failed / len(results), 3),
+            "latency_ms_avg": avg_latency,
+            "latency_ms_p95": p95_latency,
+        },
+        "tests": results
+    }
+
